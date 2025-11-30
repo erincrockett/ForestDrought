@@ -3,32 +3,27 @@
 # Crockett ETH, Qingfeng G, Atkins JE, Sun G, Potter KM, Coztanza J,
 # Ollinger S, Woodall C, McNulty  S, Trettin C, Holgerson, J, and Xiao J.
 # Influences of structural and species diversity on forest resistance to drought.
+# Ecology Letters.
 
 # (c) Erin Crockett, 2025
 # erin.crockett@unbc.ca
 
-
 library(lavaan)
-library(piecewiseSEM)
-library(mgcv)
-library(gratia)
-library(scales)
-library(foreign)
 library(sf)
 library(sp)
 library(ape)
 
-
 rm( list=ls() )
+
 
 ### (1) Set & Create File Directories ###################################################
 
 #!!! Set Your Own Base Folder Directory From Which to Read in the Function Files and Data
-base.folder <- "~~~"
+base.folder <- "..."
 
 setwd( base.folder )
 data.df.full <- read.csv( "ForestDroughtData.csv" )
-source( "AnalysisFunctions.R" )
+source( "Functions_for_Analyses.R" )
 
 ## Create Folders to Save Files
 base.folder.stats <- paste0(base.folder, "/StatsMods")
@@ -532,4 +527,3 @@ dev.off()
 
 
 ##End
-
