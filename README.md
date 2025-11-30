@@ -3,7 +3,7 @@ This R code runs the core analyses for the paper:
 
 Crockett ETH, Qingfeng G, Atkins JE, Sun G, Potter KM, Coztanza J,
 Ollinger S, Woodall C, McNulty  S, Trettin C, Holgerson, J, and Xiao J.
-Influences of structural and species diversity on forest resistance to drought.
+Influences of structural and species diversity on forest resistance to drought. Ecology Letters.
 
 (c) Erin Crockett, 2025
 erin.crockett@unbc.ca
