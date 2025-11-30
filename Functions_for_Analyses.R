@@ -3,6 +3,7 @@
 # Crockett ETH, Qingfeng G, Atkins JE, Sun G, Potter KM, Coztanza J,
 # Ollinger S, Woodall C, McNulty  S, Trettin C, Holgerson, J, and Xiao J.
 # Influences of structural and species diversity on forest resistance to drought.
+# Ecology Letters.
 
 # (c) Erin Crockett, 2025
 # erin.crockett@unbc.ca
@@ -115,6 +116,9 @@ run.SEM <- function( model.nameF , model.formulaF,
       x <- subset(modindices(sem.modF), mi > 2 )
       if( any(which(x$rhs %in% c(y.varF , str.varF ) ) ) ){
          x <- x[ - which(x$rhs %in% c(y.varF , str.varF ) ) , ]
+      }
+      if( any(which(x$op =="~~" ) ) ){
+         x <- x[ - which(x$op =="~~") , ]
       }
       #If still have vars to add
       if( nrow(x) > 0 ){
