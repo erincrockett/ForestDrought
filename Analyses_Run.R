@@ -19,7 +19,7 @@ rm( list=ls() )
 ### (1) Set & Create File Directories ###################################################
 
 #!!! Set Your Own Base Folder Directory From Which to Read in the Function Files and Data
-base.folder <- "..."
+base.folder <- "..." 
 
 setwd( base.folder )
 data.df.full <- read.csv( "ForestDroughtData.csv" )
@@ -527,3 +527,4 @@ dev.off()
 
 
 ##End
+
