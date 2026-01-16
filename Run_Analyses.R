@@ -8,18 +8,19 @@
 # (c) Erin Crockett, 2025
 # erin.crockett@unbc.ca
 
-library(lavaan)
-library(sf)
-library(sp)
-library(ape)
+#R version 4.3.1
+library(lavaan)   #v0.6-15
+library(sf)       #v1.0-14
+library(sp)       #v2.0-0
+library(ape)      #v5.7-1
 
 rm( list=ls() )
 
 
 ### (1) Set & Create File Directories ###################################################
 
-#!!! Set Your Own Base Folder Directory From Which to Read in the Function Files and Data
-base.folder <- "..." 
+#Set Your Own Base Folder Directory From Which to Read in the Function Files and Data
+base.folder <- "..."
 
 setwd( base.folder )
 data.df.full <- read.csv( "ForestDroughtData.csv" )
@@ -67,8 +68,7 @@ mod.sp <- SpatialPointsDataFrame( coords= data.df[ ,c("LONx","LATx")], data=data
                                   proj4string=CRS(nad83.prj) )
 mod.prj <- spTransform(mod.sp, CRS(lamb.prj))
 
-## Resistance
-my.y.var <- "Resistance"
+my.y.var <- "Resistance_z"
 
 #Base Mod formulas - from which to add Str and Sp variables
 m11.formula <- c(
@@ -180,9 +180,9 @@ if( !dir.exists(m12.multi.folder) ){ dir.create(m12.multi.folder) }
 explan.vars <- c("StrRich_z", "SpRich_log_z" , "Str_Even_z", "Sp_Even_z",
                  "FLDAGE_log_z", "Tavg_z" , "PrcpAvg_z", 
                  "bdod_0_200_avg_z" , "nitrogen_0_200_avg_log_z" )
-data.multi <- data.df[ , c("Resistance", explan.vars) ]
+data.multi <- data.df[ , c("Resistance_z", explan.vars) ]
 
-my.lm <- lm( Resistance ~ . , data=data.multi )
+my.lm <- lm( Resistance_z ~ . , data=data.multi )
 my.lm.sumry <- summary(my.lm)              
 my.lm.sel <- step(my.lm, direction = "backward")
 my.lm.sel.sumry <- summary(my.lm.sel)
@@ -208,9 +208,9 @@ mtext.size <- 0.9
 label.size <- 1.0
 side.spacing <- 0.1
 
-##(3.1) Fig1 - Path Analysis Diagram (and supplemental figures)
-#folder.sptl <- paste( base.folder.stats, full.drought.name , m.folder, "SEM_SptlCoeffs", sep="/")                         
-#Examined coefficients within the final file in the folder.sptl to determine values
+##(3.1) Fig1 - Path Analysis Diagram 
+#Examine coefficients within the final file of the following folder extract values. Diagram created in powerpoint.
+#setwd( paste( base.folder.stats, full.drought.name , m.folder, "SEM_SptlCoeffs", sep="/") )                        
 
 
 ##(3.2) Fig2 - Coeffs by EPA Ecoregion ------------------------------------------------
@@ -248,17 +248,21 @@ mod.strDiv <- mod.results[ which(mod.results$rhs== str.metric) , ]
 mod.strDiv$EPA_L1CODE <- factor( mod.strDiv$EPA_L1CODE , levels=c(epa.df$EPA_L1CODE) )
 mod.strDiv <- mod.strDiv[ order(mod.strDiv$EPA_L1CODE), ]
 mod.spRich <- mod.results[ which(mod.results$rhs== sp.metric ) , ]
-mod.spRich <- mod.spRich[ which(mod.spRich$yvar== "Resistance" ) , ]
+mod.spRich <- mod.spRich[ which(mod.spRich$yvar== "Resistance_z" ) , ]
 mod.spRich$EPA_L1CODE <- factor( mod.spRich$EPA_L1CODE , levels=c(epa.df$EPA_L1CODE) )
 mod.spRich <- mod.spRich[ order(mod.spRich$EPA_L1CODE), ]
 mod.spEven <- mod.results[ which(mod.results$rhs== sp.even.metric ) , ]
-mod.spEven <- mod.spEven[ which(mod.spEven$yvar== "Resistance" ) , ]
+mod.spEven <- mod.spEven[ which(mod.spEven$yvar== "Resistance_z" ) , ]
 mod.spEven$EPA_L1CODE <- factor( mod.spEven$EPA_L1CODE , levels=c(epa.df$EPA_L1CODE) )
 mod.spEven <- mod.spEven[ order(mod.spEven$EPA_L1CODE), ]
 
-#Create Figure
+## Create Figure
+#Panels a,b,c - created in ArcGIS
+ #uses the values just created above from mod.strDiv, mod.spRich, and mod.spEven
+ #to colour the EPA level 1 ecoregion polygons for the USA
+#This code create the figures for panels c,d,e
 setwd(base.folder.figs)
-png( "Fig_EPA.png" , width=8, height=3.5 , units="in" , res=900)
+png( "Fig2_EPA.png" , width=8, height=3.5 , units="in" , res=900)
 
    par(mfrow=c(1,3))
    par( oma=c(0,4,0,0))
@@ -267,7 +271,7 @@ png( "Fig_EPA.png" , width=8, height=3.5 , units="in" , res=900)
 
    ## Structural Richness
    str.main <- mod.strDiv[ , "Estimate"]
-   str.up95 <- str.main + 1.96 * (mod.strDiv[ , "Std.err"] )  #upper 95% confidience limits
+   str.up95 <- str.main + 1.96 * (mod.strDiv[ , "Std.err"] )  #upper 95% confidence limits
    str.lo95 <- str.main - 1.96 * (mod.strDiv[ , "Std.err"] )
    y.max <- ceiling( max(str.up95) *20)/20
    y.min <- floor( min(str.lo95) *20)/20
@@ -336,14 +340,14 @@ mod.results$ForestType <- factor(mod.results$ForestType,
                                  levels=c("Broadleaf","Mixed","Conifer") )
 mod.results <- mod.results[ order(mod.results$ForestType), ]
 
-mod.results <- mod.results[ which(mod.results$yvar== "Resistance") , ]
+mod.results <- mod.results[ which(mod.results$yvar== "Resistance_z") , ]
 mod.strDiv <- mod.results[ which(mod.results$rhs== str.metric) , ]
 mod.spDiv <- mod.results[ which(mod.results$rhs== sp.metric) , ]
 mod.spEven <- mod.results[ which(mod.results$rhs== sp.even.metric ) , ]
 
 #Create Figure
 setwd(base.folder.figs)
-png( "Fig_ForestType.png" , width=8, height=3.5 , units="in" , res=900)
+png( "Fig3_ForestType.png" , width=8, height=3.5 , units="in" , res=900)
 
    par(mfrow=c(1,3))
    par( oma = c(0, 4, 0, 0))
@@ -423,7 +427,7 @@ for(ii in 2:length(sptl.files)){
 mod.results$DThresh <- -1 *  mod.results$DThresh #To get the negative back
 mod.results <- mod.results[ order(mod.results$DThresh, decreasing=T) ,]
 
-mod.results <- mod.results[ which(mod.results$yvar=="Resistance") , ]
+mod.results <- mod.results[ which(mod.results$yvar=="Resistance_z") , ]
 mod.strDiv <- mod.results[ which(mod.results$rhs==str.metric) , ]
 mod.spRich <- mod.results[ which(mod.results$rhs==sp.metric) , ]
 mod.strEven <- mod.results[ which(mod.results$rhs==str.even.metric) , ]
@@ -452,7 +456,7 @@ threshs <- mod.strDiv$DThresh
 
 #Create Plot
 setwd(base.folder.figs)
-png( "Fig_StressGradient.png" , width=8, height=3.5 , units="in" , res=900)
+png( "Fig4_StressGradient.png" , width=8, height=3.5 , units="in" , res=900)
 
    par(mfrow=c(1,3))
    par( oma = c(0, 4, 0, 0))
@@ -497,10 +501,43 @@ png( "Fig_StressGradient.png" , width=8, height=3.5 , units="in" , res=900)
 dev.off()
 
 
-##(3.5) Fig S10 - Multiple Regression -------------------------------------------
+
+##(3.5) Supplemental Figures ---------------------------------------------------
+
+## Fig S1 - Map created in ArcGIS using the EPA Level Ecoregions file (dissolved to level 1)
+#  and the plot coordinates
+
+## Fig S2 - In the pre-processing code, the thresholds of 500MgC/ha/yr and 100MgC/ha/yr were not applied.
+#  Otherwise this figure was created using the same process described for Fig 1 above.
+
+## Fig S3 - See pre-processing code, end of section #8 for code to create this figure.
+
+## Fig S4 - Map created in ArcGIS using the EPA Level Ecoregions file (dissolved to level 1)
+#  and the plot coordinates for plots that experienced any of the 5 drought thresholds.
+#  (i.e. from columns LATx and LONx in the ForestDroughtData.csv file created in the processing steps)
+
+## Fig S5 - Created with the same process as Fig 1, 
+#  but uses model m11 and files within the m11.folder
+
+## Fig S6 - Created with the same process as Fig 1, 
+#  but adds a line in the model 11 formula for Biomass_log_z as a predictor variable
+
+## Fig S7 - Created with the same process as Fig 1, 
+#  but uses model m15 and files within the m15.folder
+
+## Fig S8 - Created with the same process as Fig 1, 
+#  but uses model m17 and files within the m17.folder
+
+## Fig S9 - Created with the same process as Fig 1, 
+#  but uses model m19 and files within the m19.folder
+
+## Fig S10 - Multiple Drought Categories - created with the same process as Fig 4,
+#  but in the pre-processing steps, end of section 9, follow steps to extract plots
+#  that have experienced multiple drought events and then repeate the analyses above
+
+## Fig S11 - Multiple Regression 
 setwd(m12.multi.folder)
 my.results <- read.csv("MultiReg_coeffs_BWsel.csv")
-
 my.results$X <- c("Intercept", "Structural Richness", "Species Richness", 
                   "Structural Evenness","Species Evenness",
                   "Stand Age", "Avg 20yr Temp", "Bulk Density")
@@ -511,7 +548,6 @@ my.results <- my.results[ order(my.results$Ord, decreasing = T), ]
 my.results$lower <- my.results$Estimate - (1.96*my.results$Std..Error)
 my.results$upper <- my.results$Estimate + (1.96*my.results$Std..Error)
 my.results$CNames <- factor(my.results$CNames, levels=my.results$CNames )
-
 #Create Plot
 setwd(base.folder.figs)
 png( "Fig_MultiReg.png" , width=6.5, height=6, res=900 , units="in")
@@ -526,5 +562,114 @@ png( "Fig_MultiReg.png" , width=6.5, height=6, res=900 , units="in")
 dev.off()
 
 
-##End
+## Fig S12  - this follows the same approach as m11.formula, but replaces StrRich_z with 
+#  other structural diversity variables
 
+str.vars <- c("Biomass_log_z", "Height_mean_z",  "BasalArea_log_z", 
+              "SDI_log_z", "nStems_log_z")
+str.names <- c("Biomass", "Avg Tree Height", "Basal Area",
+               "Stand Density Index", "Number of Stems")
+#Create New Folders
+dd.fol <- c("T-2.00")
+mm.fol <- c("m41_Biomass_log_z", "m42_Height_mean_z",  "m43_BasalArea_log_z", 
+            "m44_SDI_log_z", "m45_nStems_log_z")
+ss.fol <- c("SEM_reg", "SEM_SptlCoeffs", "SEM_EPA_reg", "SEM_EPA_SptlCoeffs",
+            "SEM_ForestType_reg","SEM_ForestType_SptlCoeffs",
+            "SEM_MultiThresh", "SEM_MultiThresh_SptlCoeffs")
+for(dd in 1:length(dd.fol) ){
+   dir.x1 <- paste0( base.folder.stats, "/", dd.fol[dd] )
+   if( !dir.exists(dir.x1) ){ dir.create(dir.x1) }
+   for(mm in 1:length(mm.fol) ){
+      dir.x2 <- paste0( dir.x1, "/", mm.fol[mm] )
+      if( !dir.exists(dir.x2) ){ dir.create(dir.x2) }
+      for(ss in 1:length(ss.fol) ){
+         dir.x3 <- paste0( dir.x2, "/", ss.fol[ss] )
+         if( !dir.exists(dir.x3) ){ dir.create(dir.x3) }
+      }#ss
+   }#mm
+}#dd
+getAIC.value <- function( dirF, rowF=ss , aic.dfF=aic.df ){
+   setwd(dirF)
+   ss.filesF <- list.files()
+   ss.filesF <- ss.filesF[grep("csv", ss.filesF)]
+   str.csvF <- read.csv( ss.filesF[ length(ss.filesF) ] )
+   aic.dfF[rowF,"AIC"] <- str.csvF[ which(str.csvF$lhs=="AIC"), 4]  
+   return(aic.dfF)
+}
+aic.df <- data.frame( StrVar=str.vars, AIC=NA, StrName=str.names)
+
+for(ss in 1:length(str.vars) ){
+   m.ss.folder <- paste0( base.folder.stats,"/", full.drought.name,"/m4",ss,"_",str.vars[ss])
+   run.SEM( model.nameF="m11.basic" , model.formulaF=m11.formula , 
+         str.varF = str.vars[ss]  , sp.varF = "SpRich_log_z"  ,
+         base.folderF=m.ss.folder , groupF=NULL  )
+   aic.df <- getAIC.value( paste0(m.ss.folder, "/SEM_reg"), rowF=ss )
+}
+#Add Structural Richness and Structural Shannon
+aic.df[6:7,1] <- c("StrRich_z","StrShannon_z")
+aic.df[6:7,3] <- c("Str Diversity: Richness","Str Diversity: Shannon")
+aic.df <- getAIC.value( paste0(m11.folder, "/SEM_reg"), rowF=6)
+aic.df <- getAIC.value( paste0(m13.folder, "/SEM_reg"), rowF=7)
+#Create Barplot
+aic.df <- aic.df[ order(aic.df$AIC), ]
+aic.df$StrName <- factor( aic.df$StrName, levels=aic.df$StrName)
+setwd( "F:/DataFiles" )
+png( "FigS12_AICBarplot2.png", width=14, height=12, units="cm", res=300 )
+   par( mar=c(10,4,1,1) )
+   xx <- barplot( aic.df$AIC ~ aic.df$StrName , 
+               xlab="", ylab="AIC Value", las=2,
+               ylim=c(0, max(aic.df$AIC)+1500) , col="steelblue3")  
+   vals.round <- round(aic.df$AIC) #to whole number
+   text(x = xx, y=vals.round-200, label = vals.round, pos=3, cex=0.7, col="grey60")
+   box()
+dev.off()   
+
+
+## Fig S13 - Created with the same process as Fig 1, 
+#  but uses model m13 and files within the m13.folder
+
+
+##Fig S14 - Species Richness and Juniperus Abundance
+setwd( "F:/DataFiles" )
+data.df.full <- read.csv( "ForestDroughtData.csv")
+data.df <- data.df.full[ which(data.df.full$SPEIcat == -2), ]
+##Create Template File
+setwd( paste0( "F:/FIA_Public_Data/", states[1] ) )
+tree.df <- read.csv( paste0( states[1], "_TREE.csv") )
+tree.df <- tree.df[ which(tree.df$PLT_CN %in% data.df$Before_PLT_CN), ]
+##Run Other States
+for( ii in 2:length( states ) ){
+   setwd( paste0( "F:/FIA_Public_Data/", states[ii] ) )
+   fia.tree.ii <- read.csv( paste0( states[ii], "_TREE.csv") )
+   fia.tree.ii <- fia.tree.ii[ which(fia.tree.ii$PLT_CN %in% data.df$Before_PLT_CN), ]
+   tree.df <- rbind( tree.df, fia.tree.ii )
+   print(ii)
+}
+colnames(tree.df)[2] <- "Before_PLT_CN"
+colnames(tree.df)[16] <- "SPECIESCode"
+#Calc abundance of each type of tree
+tree.df$Abundance <- 1
+comm.mat <- reshape::cast(tree.df[ ,c("Before_PLT_CN","SPECIESCode","Abundance")], 
+                             Before_PLT_CN ~ SPECIESCode, sum)  #PLT_CN is unique plot id
+rownames(comm.mat) <- comm.mat$Before_PLT_CN 	    #Make Plot ID number the rownames
+comm.mat$Before_PLT_CN <- NULL			             #Remove this to have a clean community matrix
+comm.mat <- as.data.frame(comm.mat)	       
+#Reorder
+comm.mat <- comm.mat[ as.character( data.df$Before_PLT_CN ), ]
+all.equal( rownames(comm.mat), as.character( data.df$Before_PLT_CN ) ) 
+#Plot
+setwd(base.folder.figs)
+png( "FigS14_Juniperus.png" , width=6.5, height=6, res=900 , units="in")
+   plot( comm.mat$`61` , data.df$q0,  pch=16 ,
+      xlab= expression( paste("Number of ", italic("Juniperus ashei"), " trees" ) ) , 
+      ylab="Species Richness")
+dev.off()
+
+
+##Fig S15 - Map: SPEI-NPP
+#Figure created in ArcGIS using EPA Ecoregions Level 1 as the polygon boundaries
+#See end of Pre-processing section 8 for code to extract median R2 values
+#from Productivity-SPEI relationships.
+
+
+##End##
