@@ -9,7 +9,7 @@
 # erin.crockett@unbc.ca
 
 
-## Arguments for functions below:
+## Common arguments for functions below:
 #model.nameF: what to call when save to file
 #model.formulaF: the formula to read into lavaan path model
 #y.varF: the y variable (resistance)
@@ -27,7 +27,7 @@
 
 ##[1] Run path analysis with lavaan with str div and sp div OR str even and sp even
 run.SEM <- function( model.nameF , model.formulaF, 
-                      y.varF="Resistance" , str.varF, sp.varF ,
+                      y.varF="Resistance_z" , str.varF, sp.varF ,
                       full.summaryF = all.mod.summary ,  
                       base.folderF=base.save.folder , 
                       dataF=data.df , groupF=NULL , n.grpF=20 , 
@@ -214,7 +214,7 @@ run.SEM <- function( model.nameF , model.formulaF,
 
 ##[2] Run path analysis with Multiple SPEI Thresholds
 SEM.MultiThresh <- function( model.nameF , model.formulaF , 
-                             y.varF="Resistance" , str.varF, sp.varF ,
+                             y.varF="Resistance_z" , str.varF, sp.varF ,
                              full.summaryF=all.mod.summary  ,  
                              base.folderF=base.save.folder , dataF=data.df , 
                              groupF=NULL , n.grpF=20 , 
@@ -254,7 +254,7 @@ SEM.MultiThresh <- function( model.nameF , model.formulaF ,
 
 ##[3] Run Path Analysis with Div and Even
 run.SEM.wEven <- function( model.nameF , model.formulaF, 
-                           y.varF="Resistance", str.varF, sp.varF ,
+                           y.varF="Resistance_z", str.varF, sp.varF ,
                            str.evenF = NULL , sp.evenF = NULL ,
                            restrictPathsF = "ForceCovary",
                            full.summaryF = all.mod.summary , base.folderF=base.save.folder , 
@@ -479,7 +479,7 @@ run.SEM.wEven <- function( model.nameF , model.formulaF,
 } #Close function
 
 
-##[4] Remove a variable from the model formula (text file) ---------------------
+##[4] Remove a variable from the model formula (text file) 
 remove.var.from.file <- function( fileF, rowF, rhs.remF ){
    new.fileF <-    strsplit( fileF[rowF] , split="\\+" )[[1]]
    new.fileF <- new.fileF[ -which(new.fileF == rhs.remF)]
@@ -671,5 +671,134 @@ lavSpatialCorrect <- function(obj, xvar, yvar, alpha=0.05){
    })
    return(list(Morans_I = mi, parameters=params)) 
 }
+
+
+### FIA Data Functions ###
+
+##[12] Create Community Data Matrix 
+commMatFunction <- function(longDataF){
+   #longDataF: a long data frame, with rows as individual trees with
+   commMatF <- reshape::cast(longDataF, PLT_CN ~ SPECIESCode, sum)  #PLT_CN is unique plot id
+   rownames(commMatF) <- commMatF$PLT_CN 	    #Make Plot ID number the rownames
+   commMatF$PLT_CN <- NULL			             #Remove this to have a clean community matrix
+   commMatF <- as.data.frame(commMatF)	       #Turn this from a cast object to a dataframe - so that decostand function works well
+   return(commMatF)
+}
+
+##[13] Basal Area Metrics 
+calc.basal.metrics <- function( treeF){ 
+   #treeF:  tree dataset
+   #Calculate Basal Area
+   treeF$BasalArea <- pi *( (treeF$DIA/2) ^2 )
+   #Total Basal Area per plot
+   basalarea.total <- stats::aggregate(BasalArea ~ PLT_CN, treeF, FUN=sum )  
+   return(basalarea.total)
+}
+
+##[14] Height Metrics 
+calc.height.metrics <- function( treeF ){
+   #treeF:  tree dataset
+   #Calculate Height Metrics - max, avg, median, sd
+   max.heightF <- stats::aggregate(ACTUALHT ~ PLT_CN, treeF, FUN=max )  
+   colnames(max.heightF)[2] <- "HeightActl_max"
+   median.heightF <- stats::aggregate(ACTUALHT ~ PLT_CN, treeF, FUN=median ) 
+   mean.heightF <- stats::aggregate(ACTUALHT ~ PLT_CN, treeF, FUN=mean ) 
+   #Transform to approximate normal distribution
+   treeF$Height_sqrt <- sqrt( treeF$ACTUALHT )
+   avg.sqrt.heightF <- stats::aggregate(Height_sqrt ~ PLT_CN, treeF, FUN=mean ) 
+   sd.sqrt.heightF  <- stats::aggregate(Height_sqrt ~ PLT_CN, treeF, FUN=sd ) 
+   #Coefficient of Variation
+   Height.sqrt_cv <- sd.sqrt.heightF[ ,2] / sd.sqrt.heightF[ ,2]
+   height.metricsF <- data.frame(  max.heightF, 
+                                   Height_mean = mean.heightF[ ,2],
+                                   Height_median = median.heightF[ ,2] ,
+                                   Heightsq_avg= avg.sqrt.heightF[ ,2], 
+                                   Heightsq_sd= sd.sqrt.heightF[ ,2] , 
+                                   Height.sqrt_cv)
+   return(height.metricsF)
+}
+
+##[15] NA Search - Tree Heights 
+#Determine percentage/proportion of NA values for a given plot
+height.na.search <- function( treeF ){
+   #treeF: df, with fia trees
+   #Get number of NA values
+   num.nasF   <- stats::aggregate(ACTUALHT ~ PLT_CN, treeF, function(x) {sum(is.na(x))}, na.action = NULL)
+   #Get total number of trees
+   num.treesF <- stats::aggregate(Abundance ~ PLT_CN, treeF, FUN=sum )
+   proportion.naF <- num.nasF$ACTUALHT / num.treesF$Abundance
+   proportion.dfF <- data.frame( PLT_CN = num.nasF$PLT_CN, Height.nas = proportion.naF)
+   return(proportion.dfF)
+}
+
+
+##[16] DBH and HEIGHT size classes 
+calc.size.classes <- function( treeF, size.typeF, class.widthF ){
+   #treeF: trees df
+   #size.typeF: chr,  "DBH", or "Height" - which type to cut the data into
+   #class.widthF: num, the divisions to divide classess into (in original units)
+   
+   #Set the breaks, depending on the type
+   if( size.typeF == "DBH" ){     
+      size.classesF <- seq(5, 255, class.widthF)
+   }
+   if( size.typeF == "Height" ){  
+      size.classesF <- seq(0, 400, class.widthF)   
+   }
+   #Cut into Classes  (labels as the lower side of class range, ie 5-10in labelled as 5)
+   chr.labelsF <- as.character(size.classesF)
+   chr.labelsF <- chr.labelsF[ -length(chr.labelsF) ] #remove the last one
+   if( size.typeF == "DBH" ){     col.selectF <- "DIA"  }
+   if( size.typeF == "Height" ){  col.selectF <- "ACTUALHT"  }
+   size.class.dfF <- cut(treeF[ ,col.selectF], breaks=size.classesF, labels=chr.labelsF , right = FALSE )
+   size.class.dfF <- data.frame( PLT_CN= treeF$PLT_CN, SizeClass = size.class.dfF)
+   #Add abundance value of one to each row to use in commMat step
+   size.class.dfF$Abundance <- 1
+   head(size.class.dfF)   
+   #Long to Wide - to create Community Data Matrix Style
+   classesMatF <- reshape::cast(size.class.dfF, PLT_CN ~ SizeClass, sum) 
+   rownames(classesMatF) <- classesMatF$PLT_CN 	    #Make Plot ID number the rownames
+   classesMatF$PLT_CN <- NULL			                #Remove this to have a clean community matrix
+   classesMatF <- as.data.frame(classesMatF)	       #Turn this from a cast object to a dataframe - so that decostand function works well
+   #Calculate Size Class Diversity (like one would do for species richness)
+   classesMatF.PA <- classesMatF
+   classesMatF.PA[ classesMatF.PA > 1 ] <- 1 #turn into presence absence
+   Div_q0 <- rowSums( classesMatF.PA )
+   Div_Shannon <- vegan::diversity( classesMatF, index="shannon")
+   Div_Evenness <- Div_Shannon / log( Div_q0 )
+   classes.DivF <- data.frame( PLT_CN = rownames(classesMatF), 
+                               Div_q0, Div_Shannon , Div_Evenness )
+   classes.DivF$PLT_CN <- as.numeric( classes.DivF$PLT_CN )
+   if( size.typeF == "DBH" ){  
+      colnames(classes.DivF)[2:4] <- paste0( c("DBH_Div_q0_", "DBH_Shannon_", "DBH_Evenness_"), class.widthF )
+   }
+   if( size.typeF == "Height" ){ 
+      colnames(classes.DivF)[2:4] <- paste0( c("Height_Div_q0_","Height_Shannon_", "Height_Evenness_"), class.widthF )
+   }
+   return(classes.DivF)
+}
+
+##[17] Biomass and Carbon 
+calc.biomass <- function( treeF ){
+   #Calculate total carbon
+   carbon.agF <- stats::aggregate(CARBON_AG ~ PLT_CN, treeF, FUN=sum )  #aboveground
+   carbon.bgF <- stats::aggregate(CARBON_BG ~ PLT_CN, treeF, FUN=sum )  #belowground
+   carbonF <- merge( carbon.agF, carbon.bgF, by="PLT_CN")
+   carbonF$Biomass_AG <- 2 * carbonF$CARBON_AG  #biomass is 50% carbon
+   carbonF$Biomass_BG <- 2 * carbonF$CARBON_BG
+   carbonF$CARBON_AG <- NULL
+   carbonF$CARBON_BG <- NULL
+   return(carbonF)
+}
+
+##[18] Weighted average for Condition table    
+get.weighted.avg <- function( condF, columnF, weight.colF="CONDPROP_UNADJ" ){
+   #multiply the column of interest by the weights
+   new.col <- condF[ ,columnF] * condF[ ,weight.colF]
+   #sum together by the groups (PlotID)  (since all the weights add to 1)
+   new.df <- aggregate(new.col ~ PLT_CN, data=condF, sum)
+   colnames(new.df)[2] <- columnF
+   return(new.df)
+}      
 
 
