@@ -630,9 +630,17 @@ dev.off()
 
 
 ##Fig S14 - Species Richness and Juniperus Abundance
+#Note: user must run the preprocessing code to obtain FIA data & metrics and generate a new ForestDroughtData.csv
 setwd( "F:/DataFiles" )
 data.df.full <- read.csv( "ForestDroughtData.csv")
 data.df <- data.df.full[ which(data.df.full$SPEIcat == -2), ]
+states <- c("MO","KS","NE","SD","ND","NM","AZ","NV",
+            "CO","UT","WY","MT","ID","WA","OR","CA",
+            "TN","TX","KY","VA","OK",
+            "WV","MD","DE","NJ","PA","NY",
+            "CT","RI","MA","VT","NH","ME",
+            "OH","MI","IN","IL","WI","MN","IA",
+            "SC","GA","FL","AL","MS","AR","LA","NC") 
 ##Create Template File
 setwd( paste0( "F:/FIA_Public_Data/", states[1] ) )
 tree.df <- read.csv( paste0( states[1], "_TREE.csv") )
@@ -673,3 +681,4 @@ dev.off()
 
 
 ##End##
+
