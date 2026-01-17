@@ -707,14 +707,11 @@ calc.height.metrics <- function( treeF ){
    treeF$Height_sqrt <- sqrt( treeF$ACTUALHT )
    avg.sqrt.heightF <- stats::aggregate(Height_sqrt ~ PLT_CN, treeF, FUN=mean ) 
    sd.sqrt.heightF  <- stats::aggregate(Height_sqrt ~ PLT_CN, treeF, FUN=sd ) 
-   #Coefficient of Variation
-   Height.sqrt_cv <- sd.sqrt.heightF[ ,2] / sd.sqrt.heightF[ ,2]
    height.metricsF <- data.frame(  max.heightF, 
                                    Height_mean = mean.heightF[ ,2],
                                    Height_median = median.heightF[ ,2] ,
                                    Heightsq_avg= avg.sqrt.heightF[ ,2], 
-                                   Heightsq_sd= sd.sqrt.heightF[ ,2] , 
-                                   Height.sqrt_cv)
+                                   Heightsq_sd= sd.sqrt.heightF[ ,2]  )
    return(height.metricsF)
 }
 
@@ -800,5 +797,6 @@ get.weighted.avg <- function( condF, columnF, weight.colF="CONDPROP_UNADJ" ){
    colnames(new.df)[2] <- columnF
    return(new.df)
 }      
+
 
 
