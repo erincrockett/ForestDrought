@@ -383,7 +383,7 @@ rasterStack <- function( setwdF ){
 
 ###[2] PRODUCTIVITY ###########################################################
 ## Download Productivity 
-#Landsat-based maps of net primary productivity from Google Earth Engine (Robinson et al., 2018, doi:10.1002/rse2.74), 
+#Landsat-based maps of net primary productivity from Google Earth Engine (Robinson et al., 2018, doi:10.1002/rse2.74),  (Accessed 2022 May & Jun)
 #> User needs to do separately - download to folder: "F:/Productivity"
 
 #Function - to get Productivity values at each location
@@ -450,7 +450,7 @@ save( prod.df, file= "Productivity_3x3.RData")
 
 ####[3] SOIL ###################################################################
 #Download Soil data, 1km version
-#https://files.isric.org/soilgrids/latest/data_aggregated/
+#https://files.isric.org/soilgrids/latest/data_aggregated/  (Accessed 2022 May & Jun)
 #> User needs to do separately - download bulk density (bdod) and nitrogen to folder: "F:/Soils"
 
 #Function - to get Soil values at each location  
@@ -491,7 +491,7 @@ save(soil.df, file="Soil_Values.RData")
 
 
 ####[4] EPA ECOREGIONS ########################################################
-#Download EPA Ecoregions file: https://www.epa.gov/eco-research/ecoregions-north-america
+#Download EPA Ecoregions file: https://www.epa.gov/eco-research/ecoregions-north-america  (Accessed 2021 Nov)
 #> User needs to do separately and save to folder F:/EPA_Ecoregions
 #Note: initially downloaded Level 3 file, then subsequently reduced detail to level 1 ecoregions
 
@@ -517,7 +517,7 @@ save(fia.epa, file="FIA_EPA.RData")
 
 ####[5] CANOPY COVER ############################################################
 #Need to download canopy cover data 
-#https://data.fs.usda.gov/geodata/rastergateway/treecanopy/cover
+#https://data.fs.usda.gov/geodata/rastergateway/treecanopycover  (Accessed 2022 Aug)
 #> User needs to do separately and save to folder F:/NLCD_CanopyCover
 
 get.canopycover <- function( sptl.ptsF,  canopy.rasF ){
@@ -549,7 +549,7 @@ save(canopy.cover, file="Canopy_Cover.RData")
 
 ####[6] CLIMATE ################################################################
 #Download Monthly Climate Data from Daymet
-#https://doi.org/10.3334/ORNLDAAC/1852 (version 4)
+#https://doi.org/10.3334/ORNLDAAC/1852 (version 4)  (Accessed 2022 May)
 #> User needs to do this separately
 #Save to folders 'Prcp' 'Tmax' 'Tmin' within folder "F:/Climate_Monthly"
 
