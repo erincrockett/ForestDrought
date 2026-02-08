@@ -518,6 +518,8 @@ save(fia.epa, file="FIA_EPA.RData")
 ####[5] CANOPY COVER ############################################################
 #Need to download canopy cover data 
 #https://data.fs.usda.gov/geodata/rastergateway/treecanopycover  (Accessed 2022 Aug)
+#Note: the NLCD TCC CONUS Tree Canopy Cover dataset online has been updated to a new version (v2023) since data were downloaded for the paper (file 2019_08_31)
+#Metadata: https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data/MRLC-CurrentViewer-Layers/NLCD_2011_Tree_Canopy_L48_20190831/nlcd_2011_treecanopy_2019_08_31.html#4
 #> User needs to do separately and save to folder F:/NLCD_CanopyCover
 
 get.canopycover <- function( sptl.ptsF,  canopy.rasF ){
