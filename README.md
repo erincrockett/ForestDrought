@@ -7,6 +7,7 @@ Influences of structural and species diversity on forest resistance to drought. 
 
 (c) Erin Crockett, 2025
 erin.crockett@unbc.ca
+See license file for permitted uses.
 
 Files:
 - Run_Analyses.R - provides code to run the core analyses of the paper based on the ForestDroughtData.csv dataset
